@@ -6,6 +6,8 @@ Authors: Yusuf Demir
 
 module
 
+public import Rewb.Basic
+
 /-!
 # Matching regular expressions with a backreference
 
