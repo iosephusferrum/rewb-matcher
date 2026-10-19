@@ -82,6 +82,21 @@ theorem evalInject_append (I : Finset State) (mark : ℕ → Bool) (S : Finset S
     omega
 
 variable {M} in
+/-- A simulation with injection only looks at the marks of the positions it reads. -/
+theorem evalInject_congr {I : Finset State} {mark mark' : ℕ → Bool} {u : List Symbol} :
+    ∀ {S : Finset State} {i : ℕ}, (∀ k < u.length, mark (i + k) = mark' (i + k)) →
+      M.evalInject I mark S i u = M.evalInject I mark' S i u := by
+  induction u with
+  | nil => intro S i _; rfl
+  | cons a u ih =>
+    intro S i h
+    have h0 : mark i = mark' i := h 0 (by simp)
+    rw [evalInject_cons, evalInject_cons, h0]
+    exact ih fun k hk => by
+      have := h (k + 1) (by simp [hk])
+      rwa [show i + (k + 1) = i + 1 + k by omega] at this
+
+variable {M} in
 /-- The injection lemma (Section 3.1.1): a simulation with injection reaches `q` exactly when the
 simulation from `S` reaches it, or a simulation started from `I` right after a marked position
 `i + k` does. For a single injection this is the equation after Lemma 8; Propositions 9, 13 and 22

@@ -6,6 +6,7 @@ Authors: Yusuf Demir
 
 module
 
+public import Cslib.Foundations.Data.List.Occurrence
 public import Mathlib.Computability.Language
 public import Mathlib.Data.Finset.Union
 
@@ -16,6 +17,9 @@ This file sets up what the matching algorithms work with.
 
 * `Rewb.rewbLang L₀ L L₁ L₂`: the language of the rewb `e₀(e)₁e₁\1e₂` (Definition 1), stated for
   the languages `L₀`, `L`, `L₁` and `L₂` of `e₀`, `e`, `e₁` and `e₂`.
+* `Rewb.rewbLangWith L₀ L₁ L₂ β`: the language of `r_β = e₀ β e₁ β e₂` (Section 3.1.1), with the
+  backreference fixed to `β`; `mem_rewbLangWith_iff_occursAt` describes it by two occurrences of
+  `β` in the word.
 * `Rewb.Simulator`: the automaton for `e₁` as the algorithms simulate it, given by the paper's
   `Δ(q, a)`, the initial simulation set `cl_ε(q₀)` and the accepting states `F` (Section 2, after
   Definition 3; Algorithm 1, line 1). Its `stepSet` and `evalFrom` compute `Δ(S, a)` and
@@ -48,6 +52,68 @@ theorem mem_rewbLang {L₀ L L₁ L₂ : Language Symbol} {w : List Symbol} :
     w ∈ rewbLang L₀ L L₁ L₂ ↔
       ∃ w₀ α w₁ w₂, w₀ ∈ L₀ ∧ α ∈ L ∧ w₁ ∈ L₁ ∧ w₂ ∈ L₂ ∧ w = w₀ ++ α ++ w₁ ++ α ++ w₂ :=
   Iff.rfl
+
+/-- The language of the regular expression `r_β = e₀ β e₁ β e₂` (Section 3.1.1), whose
+backreference is fixed to the word `β`: the words `w₀ ++ β ++ w₁ ++ β ++ w₂` with `w₀ ∈ L₀`,
+`w₁ ∈ L₁` and `w₂ ∈ L₂`. -/
+def rewbLangWith (L₀ L₁ L₂ : Language Symbol) (β : List Symbol) : Language Symbol :=
+  {w | ∃ w₀ w₁ w₂, w₀ ∈ L₀ ∧ w₁ ∈ L₁ ∧ w₂ ∈ L₂ ∧ w = w₀ ++ β ++ w₁ ++ β ++ w₂}
+
+theorem mem_rewbLangWith {L₀ L₁ L₂ : Language Symbol} {β w : List Symbol} :
+    w ∈ rewbLangWith L₀ L₁ L₂ β ↔
+      ∃ w₀ w₁ w₂, w₀ ∈ L₀ ∧ w₁ ∈ L₁ ∧ w₂ ∈ L₂ ∧ w = w₀ ++ β ++ w₁ ++ β ++ w₂ :=
+  Iff.rfl
+
+/-- A word is in the language of the rewb exactly when it is in the language of `r_β` for some
+`β ∈ L` (Definition 1). -/
+theorem mem_rewbLang_iff_exists_mem_rewbLangWith {L₀ L L₁ L₂ : Language Symbol}
+    {w : List Symbol} : w ∈ rewbLang L₀ L L₁ L₂ ↔ ∃ β ∈ L, w ∈ rewbLangWith L₀ L₁ L₂ β := by
+  constructor
+  · rintro ⟨w₀, β, w₁, w₂, h₀, hβ, h₁, h₂, rfl⟩
+    exact ⟨β, hβ, w₀, w₁, w₂, h₀, h₁, h₂, rfl⟩
+  · rintro ⟨β, hβ, w₀, w₁, w₂, h₀, h₁, h₂, rfl⟩
+    exact ⟨w₀, β, w₁, w₂, h₀, hβ, h₁, h₂, rfl⟩
+
+/-- A word is in the language of `r_β` exactly when `β` occurs in it at two positions `p` and
+`p'` with `p + |β| ≤ p'`, where `e₀` matches what lies before `p`, `e₁` what lies between the two
+occurrences and `e₂` what lies after the one at `p'`. -/
+theorem mem_rewbLangWith_iff_occursAt {L₀ L₁ L₂ : Language Symbol} {β w : List Symbol} :
+    w ∈ rewbLangWith L₀ L₁ L₂ β ↔
+      ∃ p p', β.OccursAt w p ∧ β.OccursAt w p' ∧ p + β.length ≤ p' ∧ w.take p ∈ L₀ ∧
+        (w.drop (p + β.length)).take (p' - (p + β.length)) ∈ L₁ ∧
+        w.drop (p' + β.length) ∈ L₂ := by
+  rw [mem_rewbLangWith]
+  constructor
+  · rintro ⟨w₀, w₁, w₂, h₀, h₁, h₂, rfl⟩
+    refine ⟨w₀.length, w₀.length + β.length + w₁.length, ?_, ?_, by omega, ?_, ?_, ?_⟩
+    · rw [List.OccursAt, show w₀ ++ β ++ w₁ ++ β ++ w₂ = w₀ ++ (β ++ (w₁ ++ β ++ w₂)) by simp,
+        List.drop_left' rfl]
+      exact List.prefix_append _ _
+    · rw [List.OccursAt, show w₀ ++ β ++ w₁ ++ β ++ w₂ = (w₀ ++ β ++ w₁) ++ (β ++ w₂) by simp,
+        List.drop_left' (by simp only [List.length_append])]
+      exact List.prefix_append _ _
+    · rwa [show w₀ ++ β ++ w₁ ++ β ++ w₂ = w₀ ++ (β ++ w₁ ++ β ++ w₂) by simp,
+        List.take_left' rfl]
+    · rwa [show w₀ ++ β ++ w₁ ++ β ++ w₂ = (w₀ ++ β) ++ (w₁ ++ (β ++ w₂)) by simp,
+        List.drop_left' (by simp),
+        show w₀.length + β.length + w₁.length - (w₀.length + β.length) = w₁.length by omega,
+        List.take_left' rfl]
+    · rwa [show w₀ ++ β ++ w₁ ++ β ++ w₂ = (w₀ ++ β ++ w₁ ++ β) ++ w₂ by simp,
+        List.drop_left' (by simp only [List.length_append])]
+  · rintro ⟨p, p', hp, hp', hle, h₀, h₁, h₂⟩
+    refine ⟨_, _, _, h₀, h₁, h₂, ?_⟩
+    have e : ∀ {i}, β.OccursAt w i → w.drop i = β ++ w.drop (i + β.length) := by
+      intro i hi
+      conv_lhs => rw [← List.take_append_drop β.length (w.drop i)]
+      rw [← List.prefix_iff_eq_take.mp hi, List.drop_drop]
+    have e' : w.drop (p + β.length) =
+        (w.drop (p + β.length)).take (p' - (p + β.length)) ++ w.drop p' := by
+      conv_lhs => rw [← List.take_append_drop (p' - (p + β.length)) (w.drop (p + β.length))]
+      rw [List.drop_drop, Nat.add_sub_of_le hle]
+    calc w = w.take p ++ w.drop p := (List.take_append_drop p w).symm
+      _ = _ := by
+        conv_lhs => rw [e hp, e', e hp']
+        simp only [List.append_assoc]
 
 /-- An automaton presented for NFA simulation. For an NFA `(Q, δ, q₀, F)` with ε-moves
 (Definition 3), `step q a` is the paper's `Δ(q, a) = cl_ε(δ(q, a))`, `start` is the initial

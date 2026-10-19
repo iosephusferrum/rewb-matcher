@@ -8,6 +8,7 @@ module
 
 public import Rewb.Basic
 public import Rewb.Injection
+public import Rewb.Match1
 
 /-!
 # Matching regular expressions with a backreference
