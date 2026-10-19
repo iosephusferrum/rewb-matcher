@@ -7,6 +7,7 @@ Authors: Yusuf Demir
 module
 
 public import Rewb.Basic
+public import Rewb.Injection
 
 /-!
 # Matching regular expressions with a backreference
