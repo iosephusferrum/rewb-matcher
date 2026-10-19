@@ -1,0 +1,30 @@
+name = "rewb"
+version = "0.1.0"
+defaultTargets = ["Rewb"]
+testDriver = "RewbTests"
+lintDriver = "batteries/runLinter"
+
+[leanOptions]
+autoImplicit = false
+weak.linter.mathlibStandardSet = true
+weak.linter.flexible = true
+# As in CSLib: these Mathlib linters do not work outside Mathlib.
+weak.linter.pythonStyle = false
+weak.linter.checkInitImports = false
+weak.linter.allScriptsDocumented = false
+weak.linter.unicodeLinter = false
+
+# Until the CSLib pull requests this project needs are merged, it builds on the fork's branch.
+[[require]]
+name = "cslib"
+git = "https://github.com/iosephusferrum/cslib"
+rev = "thompson-and-repeats"
+
+[[lean_lib]]
+name = "Rewb"
+
+[[lean_lib]]
+name = "RewbTests"
+leanOptions = {weak.linter.style.header = false}
+# The tests do not use the module system, but they import Mathlib, whose package requires it.
+allowNonModules = true
