@@ -1,4 +1,4 @@
-# rewb-lean
+# rewb-matcher
 
 A Lean 4 formalisation of the matching algorithm for regular expressions with backreferences in
 
