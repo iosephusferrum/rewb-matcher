@@ -5,7 +5,7 @@
    "type": "git",
    "subDir": null,
    "scope": "",
-   "rev": "ec4a5c530524da2f5213c61a64db6a869e88a757",
+   "rev": "a641ff31726227c97c569bdd86b0036c842a7dbe",
    "name": "cslib",
    "manifestFile": "lake-manifest.json",
    "inputRev": "thompson-and-repeats",
