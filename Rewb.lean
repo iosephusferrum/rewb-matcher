@@ -8,6 +8,7 @@ module
 
 public import Rewb.Basic
 public import Rewb.Injection
+public import Rewb.Intmed
 public import Rewb.Match1
 
 /-!
