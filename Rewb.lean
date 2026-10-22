@@ -9,6 +9,7 @@ module
 public import Rewb.Basic
 public import Rewb.Injection
 public import Rewb.Intmed
+public import Rewb.Main
 public import Rewb.Match1
 public import Rewb.Match2
 public import Rewb.Match3A
