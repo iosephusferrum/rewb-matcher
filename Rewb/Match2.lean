@@ -230,7 +230,7 @@ theorem match2_eq_true_iff [DecidableEq Symbol] {w α : List Symbol} {idx : List
 
 /-- Inside an occurrence of `α` at `p'`: from `p' + k` up to a position `p` past the occurrence,
 `w` reads the rest `α.drop k` of `α`, then what lies between the occurrence and `p`. -/
-private theorem take_drop_eq_drop_append {w α : List Symbol} {p' p k : ℕ}
+theorem take_drop_eq_drop_append {w α : List Symbol} {p' p k : ℕ}
     (hocc : α.OccursAt w p') (hk : k ≤ α.length) (hp : p' + α.length ≤ p) :
     (w.drop (p' + k)).take (p - (p' + k)) =
       α.drop k ++ (w.drop (p' + α.length)).take (p - (p' + α.length)) := by
