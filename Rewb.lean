@@ -11,6 +11,7 @@ public import Rewb.Injection
 public import Rewb.Intmed
 public import Rewb.Match1
 public import Rewb.Match2
+public import Rewb.Match3A
 
 /-!
 # Matching regular expressions with a backreference
