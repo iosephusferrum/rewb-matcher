@@ -19,6 +19,7 @@ for each state `q`.
 ## Main definitions
 
 * `Rewb.Simulator.evalInject`: the simulation of a word with injection after marked positions.
+* `Rewb.Simulator.evalInjectSum`: the simulation with summarization, with injection.
 
 ## Main statements
 
@@ -124,6 +125,20 @@ theorem evalFrom_eq_biUnion_singleton (S : Finset State) (u : List Symbol) :
   | insert q S _ ih =>
     rw [Finset.insert_eq, evalFrom_union, ih, Finset.union_biUnion, Finset.singleton_biUnion]
 
+variable {M} in
+/-- A word `u ++ v` leads from the initial set to an accepting state exactly when `u` leads to a
+state `q` from which `v` leads to an accepting state. Algorithm 2 joins `T` and `S` this way in
+line 9. -/
+theorem append_mem_accepts_iff {u v : List Symbol} :
+    u ++ v ∈ M.accepts ↔ ∃ q ∈ M.evalFrom M.start u, ∃ s ∈ M.evalFrom {q} v, s ∈ M.accept := by
+  rw [mem_accepts, evalFrom_append, M.evalFrom_eq_biUnion_singleton (M.evalFrom M.start u) v]
+  simp only [Finset.mem_biUnion]
+  constructor
+  · rintro ⟨s, ⟨q, hq, hs⟩, hacc⟩
+    exact ⟨q, hq, s, hs, hacc⟩
+  · rintro ⟨q, hq, s, hs, hacc⟩
+    exact ⟨s, ⟨q, hq, hs⟩, hacc⟩
+
 /-- Summarization composes (Section 3.1.2; Algorithm 2, line 9): injecting each state `q` of `T`
 as `{q}` into its own simulation from the empty set, and merging the results, is injecting `T`. -/
 theorem biUnion_evalInject_singleton (T : Finset State) (mark : ℕ → Bool) (i : ℕ)
@@ -140,5 +155,14 @@ theorem biUnion_evalInject_singleton (T : Finset State) (mark : ℕ → Bool) (i
     rw [evalFrom_eq_biUnion_singleton, Finset.mem_biUnion] at hp
     obtain ⟨q, hq, hp⟩ := hp
     exact ⟨q, hq, k, hk, hm, hp⟩
+
+/-- Simulation with summarization (Section 3.1.2), with injection: the simulations started from
+every state at once, as the paper's vector `S` whose component `S[l]` is started from `q_l`.
+Component `q` starts from `S q`, reads `u`, whose first symbol is at position `i`, and right after
+reading a position `p` with `mark p` adds `q` itself: the injection `S[l] ← S[l] ∪ {q_l}`. Reading
+one symbol this way is the paper's `Δ^sum`. -/
+def evalInjectSum (mark : ℕ → Bool) (S : State → Finset State) (i : ℕ) (u : List Symbol)
+    (q : State) : Finset State :=
+  M.evalInject {q} mark (S q) i u
 
 end Rewb.Simulator
