@@ -12,6 +12,7 @@ public import Rewb.Intmed
 public import Rewb.Match1
 public import Rewb.Match2
 public import Rewb.Match3A
+public import Rewb.Match3B
 
 /-!
 # Matching regular expressions with a backreference
