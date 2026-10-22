@@ -23,6 +23,7 @@ acceptance right before each occurrence of `α` that `e₂` can follow.
 ## Main statements
 
 * `Rewb.mem_match1Set`: Proposition 9, the simulation set when line 8 is reached.
+  `Rewb.mem_evalInject_match1Mark` states it for any injected set, as Algorithm 2 needs.
 * `Rewb.match1_eq_true_iff`: Lemma 10, the correctness of Match1, for every nonempty `α` whose
   occurrences do not overlap.
 
@@ -80,16 +81,18 @@ def match1Set (w α : List Symbol) (idx : List ℕ) (pre : ℕ → Bool) (p : �
 
 variable {M}
 
-/-- Proposition 9: the states of `match1Set` at `p` are those that `cl_ε(q₀)` reaches by reading
-`w` from the end of an occurrence `p'` of `α` with `Pre[p']` up to position `p`. -/
-theorem mem_match1Set {w α : List Symbol} {idx : List ℕ} {pre : ℕ → Bool} {p : ℕ} {s : State}
-    (hα : α ≠ []) (hp : p ≤ w.length) :
-    s ∈ match1Set M w α idx pre p ↔
+/-- Proposition 9 for any injected set `I`: injecting `I` after the last symbol of each occurrence
+`p'` of `α` with `Pre[p']`, the simulation reaches at position `p` the states that `I` reaches by
+reading `w` from the end of such an occurrence up to `p`. With `I = {q}` this is the `q`-th
+component in Proposition 13. -/
+theorem mem_evalInject_match1Mark {I : Finset State} {w α : List Symbol} {idx : List ℕ}
+    {pre : ℕ → Bool} {p : ℕ} {s : State} (hα : α ≠ []) (hp : p ≤ w.length) :
+    s ∈ M.evalInject I (match1Mark α idx pre) ∅ 0 (w.take p) ↔
       ∃ p' ∈ idx, pre p' = true ∧ p' + α.length ≤ p ∧
-        s ∈ M.evalFrom M.start ((w.drop (p' + α.length)).take (p - (p' + α.length))) := by
+        s ∈ M.evalFrom I ((w.drop (p' + α.length)).take (p - (p' + α.length))) := by
   have hα' := List.length_pos_iff.mpr hα
-  simp only [match1Set, Simulator.mem_evalInject, Simulator.evalFrom_empty, Finset.notMem_empty,
-    false_or, match1Mark, decide_eq_true_eq, Nat.zero_add, List.length_take, List.drop_take]
+  simp only [Simulator.mem_evalInject, Simulator.evalFrom_empty, Finset.notMem_empty, false_or,
+    match1Mark, decide_eq_true_eq, Nat.zero_add, List.length_take, List.drop_take]
   constructor
   · rintro ⟨k, hk, ⟨p', hp', hpre, hkp⟩, hs⟩
     refine ⟨p', hp', hpre, by omega, ?_⟩
@@ -97,6 +100,40 @@ theorem mem_match1Set {w α : List Symbol} {idx : List ℕ} {pre : ℕ → Bool}
   · rintro ⟨p', hp', hpre, hle, hs⟩
     refine ⟨p' + α.length - 1, by omega, ⟨p', hp', hpre, by omega⟩, ?_⟩
     rwa [show p' + α.length - 1 + 1 = p' + α.length by omega]
+
+/-- Proposition 9: the states of `match1Set` at `p` are those that `cl_ε(q₀)` reaches by reading
+`w` from the end of an occurrence `p'` of `α` with `Pre[p']` up to position `p`. -/
+theorem mem_match1Set {w α : List Symbol} {idx : List ℕ} {pre : ℕ → Bool} {p : ℕ} {s : State}
+    (hα : α ≠ []) (hp : p ≤ w.length) :
+    s ∈ match1Set M w α idx pre p ↔
+      ∃ p' ∈ idx, pre p' = true ∧ p' + α.length ≤ p ∧
+        s ∈ M.evalFrom M.start ((w.drop (p' + α.length)).take (p - (p' + α.length))) :=
+  mem_evalInject_match1Mark hα hp
+
+/-- Between an occurrence `iprev` of `α` and the next one `inext`, `match1Mark` marks only the
+position that `ique` holds: the last symbol of the occurrence at `iprev` if `Pre[iprev]`
+(Algorithm 1, line 10), and no position otherwise, since `ique` then points at or before `iprev`.
+This needs the occurrences not to overlap. -/
+theorem match1Mark_eq_decide {α : List Symbol} {idx : List ℕ} {pre : ℕ → Bool}
+    {iprev inext q k : ℕ} (hα : α ≠ []) (hno : ∀ p ∈ idx, ∀ p' ∈ idx, p < p' → p + α.length ≤ p')
+    (hiprev : iprev ∈ idx) (hlast : ∀ p ∈ idx, p < inext → p ≤ iprev)
+    (hq : pre iprev = true ∧ q = iprev + α.length ∨ pre iprev = false ∧ q ≤ iprev)
+    (hk₁ : iprev ≤ k) (hk₂ : k < inext) :
+    match1Mark α idx pre k = decide (k + 1 = q) := by
+  have hα' := List.length_pos_iff.mpr hα
+  simp only [match1Mark]
+  rw [decide_eq_decide]
+  constructor
+  · rintro ⟨p, hp, hpre, hkp⟩
+    rcases Nat.lt_or_eq_of_le (hlast p hp (by omega)) with hp_lt | rfl
+    · have := hno p hp iprev hiprev hp_lt; omega
+    · rcases hq with ⟨-, rfl⟩ | ⟨hpre', -⟩
+      · exact hkp
+      · rw [hpre'] at hpre; exact absurd hpre Bool.false_ne_true
+  · intro hkq
+    rcases hq with ⟨hpre, rfl⟩ | ⟨-, hq⟩
+    · exact ⟨iprev, hiprev, hpre, hkq⟩
+    · omega
 
 /-- The loop of Algorithm 1 finds a match exactly at the occurrences `p` where `match1Set` at `p`
 passes the acceptance test and `Suf` holds, as long as the occurrences of `α` don't overlap. The
@@ -180,20 +217,8 @@ theorem match1Loop_eq_true_iff {w α : List Symbol} {pre suf : ℕ → Bool} {id
         rw [hS, match1Set, match1Set, htake, Simulator.evalInject_append, hlen', Nat.zero_add]
         refine Simulator.evalInject_congr fun k hk => ?_
         rw [List.length_take, List.length_drop] at hk
-        simp only [match1Mark]
-        rw [decide_eq_decide]
-        constructor
-        · intro hkq
-          rcases hq with ⟨hpre, rfl⟩ | ⟨-, hq⟩
-          · exact ⟨iprev, hiprev_idx, hpre, hkq⟩
-          · omega
-        · rintro ⟨p, hp, hpre, hkp⟩
-          have hp_done := hbelow p hp (by omega)
-          rcases Nat.lt_or_eq_of_le (hmax p hp_done) with hp_lt | rfl
-          · have := hno p hp iprev hiprev_idx hp_lt; omega
-          · rcases hq with ⟨-, rfl⟩ | ⟨hpre', -⟩
-            · exact hkp
-            · rw [hpre'] at hpre; exact absurd hpre Bool.false_ne_true
+        exact (match1Mark_eq_decide hα hno hiprev_idx (fun p hp h => hmax p (hbelow p hp h)) hq
+          (by omega) (by omega)).symm
       simp only [match1Loop, hS', Bool.or_eq_true, Bool.and_eq_true, decide_eq_true_eq]
       rw [ih hsplit' ?_ ?_]
       · simp only [List.mem_cons, or_and_right, exists_or, exists_eq_left]
