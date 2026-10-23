@@ -15,6 +15,7 @@ public import Rewb.Match1
 public import Rewb.Match2
 public import Rewb.Match3A
 public import Rewb.Match3B
+public import Rewb.RegularExpression
 
 /-!
 # Matching regular expressions with a backreference
