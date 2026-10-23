@@ -8,9 +8,6 @@ import Rewb.RegularExpression
 
 /-! # The simulator of a regular expression -/
 
--- The checks are `#guard`s, which Mathlib's `#`-command linter flags.
-set_option linter.hashCommand false
-
 namespace RewbTests.RegularExpression
 
 open Rewb
