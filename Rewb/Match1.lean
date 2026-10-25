@@ -155,6 +155,7 @@ theorem match1Loop_eq_true_iff {w α : List Symbol} {pre suf : ℕ → Bool} {id
   | nil => intros; simp [match1Loop]
   | cons inext rest ih =>
     intro done iprev S ique hsplit hnone hsome
+    -- The occurrences in `done` lie below `inext`, those in `rest` above it.
     have hsorted' : (done ++ inext :: rest).Pairwise (· < ·) := by rw [hsplit]; exact hsorted
     rw [List.pairwise_append, List.pairwise_cons] at hsorted'
     obtain ⟨-, ⟨hrest, -⟩, hcross⟩ := hsorted'
@@ -187,6 +188,7 @@ theorem match1Loop_eq_true_iff {w α : List Symbol} {pre suf : ℕ → Bool} {id
     cases ique with
     | none =>
       obtain ⟨rfl, hpre⟩ := hnone rfl
+      -- Nothing is pending, so nothing is simulated: go on with `inext` in `done`.
       simp only [match1Loop]
       rw [ih hsplit' ?_ ?_]
       · simp only [List.mem_cons, or_and_right, exists_or, exists_eq_left, hempty hpre]
@@ -219,10 +221,12 @@ theorem match1Loop_eq_true_iff {w α : List Symbol} {pre suf : ℕ → Bool} {id
         rw [List.length_take, List.length_drop] at hk
         exact (match1Mark_eq_decide hα hno hiprev_idx (fun p hp h => hmax p (hbelow p hp h)) hq
           (by omega) (by omega)).symm
+      -- Line 8 tests acceptance before `inext`; then the loop goes on with `inext` in `done`.
       simp only [match1Loop, hS', Bool.or_eq_true, Bool.and_eq_true, decide_eq_true_eq]
       rw [ih hsplit' ?_ ?_]
       · simp only [List.mem_cons, or_and_right, exists_or, exists_eq_left]
       · intro h; split at h <;> simp at h
+      -- Line 10: `ique` moves to the end of `inext` if `Pre` holds there, and stays otherwise.
       · intro q' h
         refine ⟨by simp, hle_done, rfl, ?_⟩
         split at h
@@ -254,6 +258,7 @@ theorem match1_eq_true_iff [DecidableEq Symbol] {L₀ L L₁ L₂ : Language Sym
   rw [match1, Bool.and_eq_true, hloop, hpreα α.length le_rfl, List.take_length,
     mem_rewbLangWith_iff_occursAt]
   refine and_congr_right fun _ => ⟨?_, ?_⟩
+  -- The occurrence where line 8 succeeds is the second one; `match1Set` gives the first.
   · rintro ⟨p, hp, ⟨s, hs, hacc⟩, hsufp⟩
     have hpw : p ≤ w.length := by have := hlen p hp; omega
     rw [mem_match1Set hα hpw] at hs

@@ -109,6 +109,7 @@ theorem match2Loop_eq_true_iff {w α : List Symbol} {pre suf preα : ℕ → Boo
   | nil => intros; simp [match2Loop]
   | cons inext rest ih =>
     intro done iprev S ique hsplit hnone hsome
+    -- The occurrences in `done` lie below `inext`, those in `rest` above it.
     have hsorted' : (done ++ inext :: rest).Pairwise (· < ·) := by rw [hsplit]; exact hsorted
     rw [List.pairwise_append, List.pairwise_cons] at hsorted'
     obtain ⟨-, ⟨hrest, -⟩, hcross⟩ := hsorted'
@@ -141,6 +142,7 @@ theorem match2Loop_eq_true_iff {w α : List Symbol} {pre suf preα : ℕ → Boo
     cases ique with
     | none =>
       obtain ⟨rfl, hpre⟩ := hnone rfl
+      -- Nothing is pending, so nothing is simulated: go on with `inext` in `done`.
       simp only [match2Loop]
       rw [ih hsplit' ?_ ?_]
       · simp only [List.mem_cons, or_and_right, exists_or, exists_eq_left, hempty hpre]
@@ -175,12 +177,15 @@ theorem match2Loop_eq_true_iff {w α : List Symbol} {pre suf preα : ℕ → Boo
         rw [List.length_take, List.length_drop] at hk
         exact (match1Mark_eq_decide hα hno hiprev_idx (fun p hp h => hmax p (hbelow p hp h)) hq
           (by omega) (by omega)).symm
+      -- Line 9 joins Intmed's `T` with the summary at `inext`; then the loop goes on with
+      -- `inext` in `done`.
       simp only [match2Loop]
       rw [hS']
       simp only [Bool.or_eq_true, decide_eq_true_eq]
       rw [ih hsplit' ?_ ?_]
       · simp only [List.mem_cons, or_and_right, exists_or, exists_eq_left]
       · intro h; split at h <;> simp at h
+      -- Line 11: `ique` moves to the end of `inext` if `Pre` holds there, and stays otherwise.
       · intro q' h
         refine ⟨by simp, hle_done, rfl, ?_⟩
         split at h
@@ -214,6 +219,7 @@ theorem match2_eq_true_iff [DecidableEq Symbol] {w α : List Symbol} {idx : List
     (rest := idx) (done := []) (iprev := 0) (S := fun _ => ∅) (ique := none) rfl
     (fun _ => ⟨rfl, by simp⟩) (by simp)
   rw [match2, hloop]
+  -- In line 9, `t` comes from Intmed (Lemma 14) and `s` from the summary (Proposition 13).
   constructor
   · rintro ⟨p, hp, t, ht, s, hs, hacc⟩
     have hpw : p ≤ w.length := by have := hlen p hp; omega
@@ -262,6 +268,8 @@ theorem exists_mem_rewbLangWith_of_match2_eq_true [DecidableEq Symbol]
   · rw [mem_rewbLangWith_iff_occursAt, hlenk]
     refine ⟨p', p, hp'.of_prefix (List.take_prefix k α), hp.of_prefix (List.take_prefix k α),
       by omega, (hpre p' (by omega)).mp hprep', ?_, (hsuf (p + k) (by omega)).mp hsufk⟩
+    -- What `e₁` reads, the rest of `α` and then the gap, lies between the two occurrences of
+    -- `α.take k`.
     rw [take_drop_eq_drop_append hp' hk₂ hle, ← hM]
     exact hacc
 
@@ -286,6 +294,7 @@ theorem match2_eq_true_of_isExtendablePrefix [DecidableEq Symbol]
   have hk₂ := hβ.isPrefix.length_le
   rw [mem_rewbLangWith_iff_occursAt] at hw
   obtain ⟨p', p, hp', hp, hle, h₀, h₁, h₂⟩ := hw
+  -- Both occurrences of `β` are occurrences of `α`, so they do not overlap.
   have hp'α := hβ.occursAt p' hp'
   have hpα := hβ.occursAt p hp
   have hle' := hno p' p hp'α hpα (by omega)

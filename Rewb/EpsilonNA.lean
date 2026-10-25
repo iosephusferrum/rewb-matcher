@@ -159,6 +159,7 @@ theorem coe_evalFrom_ofEpsilonNA {S : Finset State} (hS : a.εClosure S = S) (u 
 theorem accepts_ofEpsilonNA : (Simulator.ofEpsilonNA a).accepts = language a := by
   rw [← εNA.FinAcc.toNAFinAcc_language_eq]
   ext u
+  -- The initial set is ε-closed, so from it the simulator follows `toNAFinAcc`.
   have hstart : a.εClosure ((Simulator.ofEpsilonNA a).start : Set State) =
       (Simulator.ofEpsilonNA a).start := by
     rw [coe_start_ofEpsilonNA]

@@ -62,6 +62,7 @@ theorem mem_intmed {α : List Symbol} {p kbeg : ℕ} {preα suf : ℕ → Bool} 
         s ∈ M.evalFrom M.start (α.drop k) := by
   rw [intmed, Simulator.mem_evalInject]
   simp only [List.length_drop, List.drop_drop, Bool.and_eq_true]
+  -- An injection comes from the first check, at prefix length `kbeg`, or from the loop after it.
   constructor
   · rintro (hs | ⟨j, hj, ⟨hpre, hsuf⟩, hs⟩)
     · by_cases hc : preα kbeg = true ∧ suf (p + kbeg) = true

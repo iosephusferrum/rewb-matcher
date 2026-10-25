@@ -85,6 +85,7 @@ theorem mem_rewbLangWith_iff_occursAt {L₀ L₁ L₂ : Language Symbol} {β w :
   rw [mem_rewbLangWith]
   constructor
   · rintro ⟨w₀, w₁, w₂, h₀, h₁, h₂, rfl⟩
+    -- The two occurrences of `β` start at `|w₀|` and at `|w₀ β w₁|`.
     refine ⟨w₀.length, w₀.length + β.length + w₁.length, ?_, ?_, by omega, ?_, ?_, ?_⟩
     · rw [List.OccursAt, show w₀ ++ β ++ w₁ ++ β ++ w₂ = w₀ ++ (β ++ (w₁ ++ β ++ w₂)) by simp,
         List.drop_left' rfl]
@@ -102,6 +103,7 @@ theorem mem_rewbLangWith_iff_occursAt {L₀ L₁ L₂ : Language Symbol} {β w :
         List.drop_left' (by simp only [List.length_append])]
   · rintro ⟨p, p', hp, hp', hle, h₀, h₁, h₂⟩
     refine ⟨_, _, _, h₀, h₁, h₂, ?_⟩
+    -- Cut `w` at `p`, after the first `β`, at `p'` and after the second `β`.
     have e : ∀ {i}, β.OccursAt w i → w.drop i = β ++ w.drop (i + β.length) := by
       intro i hi
       conv_lhs => rw [← List.take_append_drop β.length (w.drop i)]

@@ -190,6 +190,8 @@ theorem match3BLoop_eq_true_iff {α : List Symbol} {pre suf preα : ℕ → Bool
     obtain ⟨p₀, f₀⟩ := x
     simp only [match3BLoop, Bool.or_eq_true, Bool.and_eq_true, decide_eq_true_eq]
     rw [ih]
+    -- The pair that succeeds is the first one, or one further on, which the loop reaches with
+    -- `fprev = f₀` (line 16).
     constructor
     · rintro (⟨⟨⟨h₁, h₂⟩, h₃⟩, h₄⟩ | ⟨l₁, p, f, l₂, rfl, h⟩)
       · exact ⟨[], p₀, f₀, occ, rfl, h₁, h₂, h₃, h₄⟩
@@ -229,6 +231,7 @@ theorem exists_mem_rewbLangWith_of_match3B_eq_true [DecidableEq Symbol]
   have hfocc := (List.mem_occurrences_of_ne_nil hα).mp (fwd_mem (n := α.length) hi)
   have hflt := fwd_lt (idx := α.occurrences w) (i := i) hα'
   have hfw := hfocc.add_length_le hα
+  -- Proposition 22 gives the prefix length `k` and the run of `e₁` inside the occurrence at `i`.
   obtain ⟨k, hk₁, hk₂, hpreαk, hsufk, hs⟩ := (mem_intmed_take hiocc (by omega) (by omega)).mp hs
   have hlenk : (α.take k).length = k := List.length_take_of_le (by omega)
   refine ⟨α.take k, List.take_prefix k α, ?_, (hpreα k (by omega)).mp hpreαk, ?_⟩
@@ -296,6 +299,7 @@ theorem match3B_eq_true_of_isExtendablePrefix [DecidableEq Symbol]
   -- The part between the two occurrences of `β` is accepted.
   rw [← hM] at h₁
   obtain ⟨s, hs, hacc⟩ := Simulator.mem_accepts.mp h₁
+  -- The pair `(p₁, p₂)` passes the guard of line 9, and Intmed injects at prefix length `|β|`.
   rw [match3B, match3BLoop_eq_true_iff]
   refine ⟨l₁.map fun i => (i, fwd α.length (α.occurrences w) i), p₁, p₂,
     l₂.map fun i => (i, fwd α.length (α.occurrences w) i), ?_, by omega,

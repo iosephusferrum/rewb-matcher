@@ -108,6 +108,7 @@ theorem evalQue_fst {S : State → Finset State} {que : List ℕ} {i : ℕ} {u :
   | cons a u ih =>
     rw [evalQue]
     split
+    -- The head of `Que` is due: inject and dequeue it. Being sorted, `Que` holds it only once.
     · rename_i hhead
       obtain ⟨que', rfl⟩ := List.head?_eq_some_iff.mp hhead
       rw [List.tail_cons, ih hsorted.of_cons fun q hq => List.rel_of_pairwise_cons hsorted hq]
@@ -117,6 +118,7 @@ theorem evalQue_fst {S : State → Finset State} {que : List ℕ} {i : ℕ} {u :
       refine Simulator.evalInject_congr fun k _ => ?_
       have hne : i + 1 + k + 1 ≠ i + 1 := by omega
       simp only [hne, false_or]
+    -- Nothing is due: no injection, and `Que` stays as it is.
     · rename_i hhead
       have hnot : i + 1 ∉ que := fun h => hhead ((head?_eq_some_iff_mem hsorted hgt).mpr h)
       rw [ih hsorted fun q hq => by
@@ -203,6 +205,7 @@ theorem match3ALoop_eq_true_iff {w α : List Symbol} {pre suf preα : ℕ → Bo
   | nil => intros; simp [match3ALoop]
   | cons inext rest ih =>
     intro done iprev S que hsplit hnone hsome
+    -- The occurrences in `done` lie below `inext`, those in `rest` above it.
     have hsorted' : (done ++ inext :: rest).Pairwise (· < ·) := by rw [hsplit]; exact hsorted
     rw [List.pairwise_append, List.pairwise_cons] at hsorted'
     obtain ⟨hdone_sorted, ⟨hrest, -⟩, hcross⟩ := hsorted'
@@ -235,6 +238,7 @@ theorem match3ALoop_eq_true_iff {w α : List Symbol} {pre suf preα : ℕ → Bo
     cases que with
     | none =>
       obtain ⟨rfl, hpre⟩ := hnone rfl
+      -- Nothing is pending, so nothing is simulated: go on with `inext` in `done`.
       simp only [match3ALoop]
       rw [ih hsplit' ?_ ?_]
       · simp only [List.mem_cons, or_and_right, exists_or, exists_eq_left, hempty hpre]
@@ -307,6 +311,8 @@ theorem match3ALoop_eq_true_iff {w α : List Symbol} {pre suf preα : ℕ → Bo
           (match2Set M w α idx pre inext,
             (done.filter fun p => pre p && decide (inext < p + α.length)).map (· + α.length)) :=
         Prod.ext hS' hque'
+      -- Line 12 joins Intmed's `T` with the summary at `inext`; lines 14 to 16 enqueue the end of
+      -- `inext` if `Pre` holds there.
       simp only [match3ALoop]
       rw [hpair]
       simp only [Bool.or_eq_true, decide_eq_true_eq]
@@ -346,6 +352,7 @@ theorem match3A_eq_true_iff [DecidableEq Symbol] {w α : List Symbol} {idx : Lis
     (rest := idx) (done := []) (iprev := 0) (S := fun _ => ∅) (que := none) rfl
     (fun _ => ⟨rfl, by simp⟩) (by simp)
   rw [match3A, hloop]
+  -- In line 12, `t` comes from Intmed (Lemma 14) and `s` from the summary (Proposition 13).
   constructor
   · rintro ⟨p, hp, t, ht, s, hs, hacc⟩
     have hpw : p ≤ w.length := by have := hlen p hp; omega
@@ -377,6 +384,8 @@ theorem exists_mem_rewbLangWith_of_match3A_eq_true [DecidableEq Symbol]
   · rw [mem_rewbLangWith_iff_occursAt, hlenk]
     refine ⟨p', p, hp'.of_prefix (List.take_prefix k α), hp.of_prefix (List.take_prefix k α),
       by omega, (hpre p' (by omega)).mp hprep', ?_, (hsuf (p + k) (by omega)).mp hsufk⟩
+    -- What `e₁` reads, the rest of `α` and then the gap, lies between the two occurrences of
+    -- `α.take k`.
     rw [take_drop_eq_drop_append hp' hk₂ hle, ← hM]
     exact hacc
 
@@ -401,6 +410,7 @@ theorem match3A_eq_true_of_isExtendablePrefix [DecidableEq Symbol]
     omega
   have hβ' := List.length_pos_iff.mpr hβne
   have hk₂ := hβ.isPrefix.length_le
+  -- Both occurrences of `β` are occurrences of `α`.
   have hp₁α := hβ.occursAt p₁ hp₁
   have hp₂α := hβ.occursAt p₂ hp₂
   have hpw := hp₂α.add_length_le hα

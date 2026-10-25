@@ -100,6 +100,7 @@ theorem matchEmpty_eq_true_iff {L₀ L₁ L₂ : Language Symbol} {w : List Symb
         rwa [List.drop_take]
   rw [matchEmpty, List.any_eq_true]
   constructor
+  -- A test that succeeds at `j` splits `w` at some `i ≤ j` with `Pre[i]`, and at `j`.
   · rintro ⟨j, hj, h⟩
     rw [List.mem_range] at hj
     simp only [Bool.and_eq_true, decide_eq_true_eq] at h
@@ -112,6 +113,7 @@ theorem matchEmpty_eq_true_iff {L₀ L₁ L₂ : Language Symbol} {w : List Symb
     · conv_lhs => rw [← List.take_append_drop i w, ← List.take_append_drop (j - i) (w.drop i),
         List.drop_drop, Nat.add_sub_of_le hi]
       simp
+  -- Conversely, the test succeeds at the end of `w₀ w₁`.
   · intro hw
     obtain ⟨w₀, w₁, w₂, h₀, h₁, h₂, rfl⟩ := mem_rewbLangWith.mp hw
     rw [← hM] at h₁
