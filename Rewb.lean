@@ -17,6 +17,7 @@ public import Rewb.Match2
 public import Rewb.Match3A
 public import Rewb.Match3B
 public import Rewb.RegularExpression
+public import Rewb.Timed.Fwd
 public import Rewb.Timed.Match3A
 public import Rewb.Timed.Simulation
 
