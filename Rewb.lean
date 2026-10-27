@@ -8,6 +8,7 @@ module
 
 public import Rewb.Basic
 public import Rewb.EpsilonNA
+public import Rewb.ForCslib.Occurrence
 public import Rewb.ForCslib.Repeat
 public import Rewb.Injection
 public import Rewb.Intmed
@@ -23,6 +24,7 @@ public import Rewb.Timed.Main
 public import Rewb.Timed.Match3A
 public import Rewb.Timed.Match3B
 public import Rewb.Timed.Simulation
+public import Rewb.Timed.Theorem5
 
 /-!
 # Matching regular expressions with a backreference
