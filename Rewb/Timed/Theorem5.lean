@@ -49,27 +49,33 @@ namespace Rewb.Timed
 open Cslib.Algorithms.Lean
 open scoped Cslib.Algorithms.Lean.TimeM
 
-/-- `List.anyM` in `TimeM` computes `List.any`. -/
+/-- `List.any` for a timed test, stopping at the first `true`. Core's `List.anyM` does the same,
+but its body is not exposed to proofs in other modules. -/
+def anyM {β : Type*} (p : β → TimeM ℕ Bool) : List β → TimeM ℕ Bool
+  | [] => pure false
+  | b :: l => do
+    let found ← p b
+    if found then pure true else anyM p l
+
 @[simp]
 theorem ret_anyM {β : Type*} (p : β → TimeM ℕ Bool) (l : List β) :
-    ⟪l.anyM p⟫ = l.any fun b => ⟪p b⟫ := by
+    ⟪anyM p l⟫ = l.any fun b => ⟪p b⟫ := by
   induction l with
   | nil => rfl
   | cons b l ih =>
-    simp only [List.anyM, TimeM.ret_bind, List.any_cons]
+    simp only [anyM, TimeM.ret_bind, List.any_cons]
     cases ⟪p b⟫ <;> simp [ih]
 
-/-- `List.anyM` in `TimeM` takes at most the times of all its calls: it stops at the first
-`true`. -/
+/-- `anyM` takes at most the times of all the tests, since it stops at the first `true`. -/
 theorem time_anyM_le {β : Type*} (p : β → TimeM ℕ Bool) (l : List β) :
-    (l.anyM p).time ≤ (l.map fun b => (p b).time).sum := by
+    (anyM p l).time ≤ (l.map fun b => (p b).time).sum := by
   induction l with
-  | nil => simp [List.anyM]
+  | nil => simp [anyM]
   | cons b l ih =>
-    simp only [List.anyM, TimeM.time_bind, List.map_cons, List.sum_cons]
+    simp only [anyM, TimeM.time_bind, List.map_cons, List.sum_cons]
     cases ⟪p b⟫
-    · simp only; omega
-    · simp only [TimeM.time_pure]; omega
+    · simp only [Bool.false_eq_true, ite_false]; omega
+    · simp only [ite_true, TimeM.time_pure]; omega
 
 /-- A sum of terms that are each at most `K` is at most `K` times their number. -/
 private theorem sum_le_length_mul {l : List ℕ} {K : ℕ} (h : ∀ x ∈ l, x ≤ K) :
@@ -120,9 +126,9 @@ def main (w : List Symbol) (buildPre buildSuf : TimeM ℕ (ℕ → Bool))
     pure true
   else
     let reps ← enum
-    reps.anyM fun r => do
+    anyM (fun r => do
       let preα ← buildPreα r.1
-      matchRepeat M C w r.1 r.2 pre suf preα
+      matchRepeat M C w r.1 r.2 pre suf preα) reps
 
 variable [DecidableEq Symbol]
 
