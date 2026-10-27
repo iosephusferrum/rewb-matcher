@@ -24,7 +24,9 @@ Theorem 5 bounds the time of Main by `O(n² + n(m_e₀ + m_e₂) + µ_right · n
 `µ_right ≤ n - 1` right-maximal repeats. `time_main_le` is this bound in the cost model: the
 constructions of `Pre` and `Suf`, the enumeration, `C.step` per position for the check of
 `e₀ e₁ e₂`, and, for each of at most `n - 1` right-maximal repeats, `Pre_α` and `Match(α)`, at most
-`n · (7 + 2 · C.sumStep + 4 · C.step)` since `α` occurs at most `n` times.
+`n · (7 + 2 · C.sumStep + 4 · C.step)` since `α` occurs at most `n` times. With every cost
+bounded in terms of the length `m` of the rewb, `time_main_le_mul_sq_mul_sq` gives Theorem 5 as
+stated, `O(n²m²)`.
 
 ## Main definitions
 
@@ -35,6 +37,7 @@ constructions of `Pre` and `Suf`, the enumeration, `C.step` per position for the
 * `Rewb.Timed.ret_main`: the timed Main computes `Rewb.main`, so that it is correct
   (`Rewb.main_eq_true_iff`, the correctness part of Theorem 5).
 * `Rewb.Timed.time_main_le`: the time bound of Theorem 5.
+* `Rewb.Timed.time_main_le_mul_sq_mul_sq`: Theorem 5 as stated, `O(n²m²)`.
 
 ## References
 
@@ -208,5 +211,49 @@ theorem time_main_le (w : List Symbol) (buildPre buildSuf : TimeM ℕ (ℕ → B
   split
   · simp only [TimeM.time_pure]; omega
   · simp only [TimeM.time_bind]; omega
+
+/-- Theorem 5 as stated (Section 3): Main takes `O(n²m²)` time. Here `m ≥ 1` stands for the
+length of the rewb, scaled by the constants of the costs: a step costs at most `m`, an NFASS step
+at most `m²`, building `Pre` and `Suf` at most `(n + 1) · m` each, building `Pre_α` at most
+`(|α| + 1) · m`, and the enumeration, `O(n²)`, at most `(n + 1)² · m`. Then Main takes at most
+`20 · (n + 1)² · m²`. -/
+theorem time_main_le_mul_sq_mul_sq (w : List Symbol) (buildPre buildSuf : TimeM ℕ (ℕ → Bool))
+    (buildPreα : List Symbol → TimeM ℕ (ℕ → Bool))
+    (enum : TimeM ℕ (List (List Symbol × List ℕ))) {m : ℕ} (hm : 0 < m)
+    (henum : ⟪enum⟫.Perm (w.rightMaximalRepeats.map fun α => (α, α.occurrences w)))
+    (hstep : C.step ≤ m) (hsumStep : C.sumStep ≤ m ^ 2)
+    (hpre : buildPre.time ≤ (w.length + 1) * m) (hsuf : buildSuf.time ≤ (w.length + 1) * m)
+    (hpreα : ∀ α, (buildPreα α).time ≤ (α.length + 1) * m)
+    (henumTime : enum.time ≤ (w.length + 1) ^ 2 * m) :
+    (main M C w buildPre buildSuf buildPreα enum).time ≤ 20 * (w.length + 1) ^ 2 * m ^ 2 := by
+  have hmain := time_main_le M C w buildPre buildSuf buildPreα enum henum hpreα
+  -- Each part is at most a multiple of `q²`, for `q = (n + 1) · m ≥ 1`.
+  have hq : (w.length + 1) * m ≤ (w.length + 1) * m * ((w.length + 1) * m) :=
+    Nat.le_mul_of_pos_right _ (Nat.mul_pos (Nat.succ_pos _) hm)
+  have hmq : m ≤ (w.length + 1) * m := Nat.le_mul_of_pos_left m (Nat.succ_pos _)
+  have hmm : m ≤ m * m := Nat.le_mul_of_pos_right m hm
+  have henum' : enum.time ≤ (w.length + 1) * m * ((w.length + 1) * m) := by
+    refine henumTime.trans ?_
+    rw [Nat.pow_two, Nat.mul_assoc (w.length + 1) (w.length + 1) m]
+    exact Nat.mul_le_mul_right _ (Nat.le_mul_of_pos_right _ hm)
+  have hempty : (2 * w.length + 1) * C.step ≤ 2 * ((w.length + 1) * m) := by
+    rw [← Nat.mul_assoc 2 (w.length + 1) m]
+    exact Nat.mul_le_mul (by omega) hstep
+  have hrep : (w.length - 1) *
+      ((w.length + 1) * m + w.length * (7 + 2 * C.sumStep + 4 * C.step)) ≤
+      14 * ((w.length + 1) * m * ((w.length + 1) * m)) := by
+    have h₁ : 7 + 2 * C.sumStep + 4 * C.step ≤ 13 * (m * m) := by
+      rw [Nat.pow_two] at hsumStep
+      omega
+    have h₂ : (w.length + 1) * m ≤ (w.length + 1) * (m * m) := Nat.mul_le_mul_left _ hmm
+    have h₃ : w.length * (7 + 2 * C.sumStep + 4 * C.step) ≤ 13 * ((w.length + 1) * (m * m)) := by
+      rw [Nat.mul_left_comm 13]
+      exact Nat.mul_le_mul (by omega) h₁
+    calc _ ≤ (w.length + 1) * (14 * ((w.length + 1) * (m * m))) :=
+          Nat.mul_le_mul (by omega) (by omega)
+      _ = 14 * ((w.length + 1) * m * ((w.length + 1) * m)) := by ac_rfl
+  rw [show 20 * (w.length + 1) ^ 2 * m ^ 2 = 20 * ((w.length + 1) * m * ((w.length + 1) * m)) by
+    rw [Nat.pow_two, Nat.pow_two]; ac_rfl]
+  omega
 
 end Rewb.Timed
