@@ -8,8 +8,6 @@ module
 
 public import Rewb.Basic
 public import Rewb.EpsilonNA
-public import Rewb.ForCslib.Occurrence
-public import Rewb.ForCslib.Repeat
 public import Rewb.Injection
 public import Rewb.Intmed
 public import Rewb.Main

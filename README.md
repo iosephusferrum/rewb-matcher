@@ -51,12 +51,10 @@ bound of Theorem 5, `O(n + m²)`, is not formalised.
 | `Rewb/Timed/Match3B.lean` | Match3B, timed | Algorithm 5, Section 3.2 |
 | `Rewb/Timed/Main.lean` | the check of `e₀ e₁ e₂` in one pass, and Match, timed | Section 3 |
 | `Rewb/Timed/Theorem5.lean` | Main, timed, and its time bound | Theorem 5 |
-| `Rewb/ForCslib/Occurrence.lean` | a word occurs at most `n` times | Section 2 |
-| `Rewb/ForCslib/Repeat.lean` | a word has at most `n − 1` right-maximal repeats | Section 2 |
 
 CSLib, through the pull requests above, provides the occurrences and the right-maximal repeats of
-a word, extendable prefixes with Lemma 17, and Thompson's construction. `Rewb/ForCslib/` holds
-further facts about words of this kind, meant for a later CSLib pull request.
+a word with bounds on their numbers, extendable prefixes with Lemma 17, and Thompson's
+construction.
 
 ## Time complexity
 
@@ -87,9 +85,9 @@ pass over `w`. With `n = |w|`:
 - `time_matchRepeat_le`: Match(α) takes at most
   `|Idx_α|·(7 + C.sumStep + 2·C.step) + n·(C.sumStep + 2·C.step)`, the paper's
   `O(n(m_e + m²_e₁))` apart from building `Pre_α`.
-- `List.length_occurrences_le` and `List.length_rightMaximalRepeats_le`: a nonempty word occurs at
-  most `n` times in `w`, and `w` has at most `n − 1` right-maximal repeats (Gusfield's bound,
-  proved by adding one letter at a time).
+- `List.length_occurrences_le` and `List.length_rightMaximalRepeats_le`, in CSLib: a nonempty word
+  occurs at most `n` times in `w`, and `w` has at most `n − 1` right-maximal repeats (Gusfield's
+  bound, proved by adding one letter at a time).
 - `time_main_le`: Main takes at most the time of building `Pre` and `Suf` and of the enumeration,
   plus `cₑ + (2n + 1)·C.step` for testing whether `e` matches `ε` and checking `e₀ e₁ e₂`, plus
   `(n + 1)·cₑ + n·(7 + 2·C.sumStep + 4·C.step)` for each of the at most `n − 1` right-maximal
